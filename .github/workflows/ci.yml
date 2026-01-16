@@ -717,7 +717,7 @@ jobs:
 
       - name: Execute install-cmakepresets.sh
         run: >
-          CXXFLAGS="${CXXFLAGS} -I${{ env.LIBBITCOIN_SRC_PATH }}prefix/include/bitcoin/ssl" ./install-cmakepresets.sh
+          CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -I${{ env.LIBBITCOIN_SRC_PATH }}prefix/include/bitcoin/ssl" ./install-cmakepresets.sh
           --build-dir=${{ env.LIBBITCOIN_SRC_PATH }} ${{ matrix.options }}
           --prefix=${{ env.LIBBITCOIN_SRC_PATH }}prefix/${{ matrix.preset }}
           --preset=${{ matrix.preset }}
