@@ -31,7 +31,6 @@ node_test/
 /builds/msvc/vs2022/bn/hosts.cache
 *.lock
 *.vsidx
-*.txt
 *.data
 *.head
 /.vs

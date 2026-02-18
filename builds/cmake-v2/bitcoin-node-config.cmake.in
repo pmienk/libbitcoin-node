@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/bitcoin-node-targets.cmake")
+
+check_required_components(system)
+
+# Propagate dependencies to consumers
+include(CMakeFindDependencyMacro)
+
+find_dependency(bitcoin-database 4.0.0 REQUIRED)
+find_dependency(bitcoin-network 4.0.0 REQUIRED)

@@ -41,10 +41,11 @@
 # Branches for github dependencies.
 #------------------------------------------------------------------------------
 SECP256K1_BRANCH="v0.7.0"
-BITCOIN_SYSTEM_BRANCH="master"
-BITCOIN_NETWORK_BRANCH="master"
-BITCOIN_DATABASE_BRANCH="master"
-BITCOIN_NODE_BRANCH="master"
+BITCOIN_SYSTEM_BRANCH="cmake-experiment"
+BITCOIN_NETWORK_BRANCH="cmake-experimental"
+BITCOIN_DATABASE_BRANCH="cmake-experimental"
+BITCOIN_NODE_BRANCH="cmake-experimental"
+BITCOIN_OWNER="pmienk"
 
 # Sentinel for comparison of sequential build.
 #------------------------------------------------------------------------------
@@ -449,6 +450,13 @@ set_pkgconfigdir()
     with_pkgconfigdir="-Dpkgconfigdir=$PREFIX_PKG_CONFIG_DIR"
 }
 
+set_with_icu_prefix()
+{
+    if [[ $BUILD_ICU ]]; then
+        export ICU_ROOT="$PREFIX"
+    fi
+}
+
 set_with_boost_prefix()
 {
     if [[ $BUILD_BOOST ]]; then
@@ -708,15 +716,24 @@ cmake_tests()
 cmake_project_directory()
 {
     local PROJ_NAME=$1
-    local JOBS=$2
-    local TEST=$3
-    shift 3
+    local MAKEFILE_PATH=$2
+    local JOBS=$3
+    local TEST=$4
+    shift 4
 
     push_directory "$PROJ_NAME"
     local PROJ_CONFIG_DIR
     PROJ_CONFIG_DIR=$(pwd)
 
-    cmake -LA $@ builds/cmake
+    create_directory "build-cmake"
+    push_directory "build-cmake"
+
+    VERBOSITY=""
+    if [[ $DISPLAY_VERBOSE ]]; then
+        VERBOSITY="-DCMAKE_VERBOSE_MAKEFILE=ON"
+    fi
+
+    cmake ${VERBOSITY} -LA $@ "../$MAKEFILE_PATH"
     make_jobs "$JOBS"
 
     if [[ $TEST == true ]]; then
@@ -731,11 +748,12 @@ cmake_project_directory()
 build_from_github_cmake()
 {
     local REPO=$1
-    local JOBS=$2
-    local TEST=$3
-    local BUILD=$4
-    local OPTIONS=$5
-    shift 5
+    local MAKEFILE_PATH=$2
+    local JOBS=$3
+    local TEST=$4
+    local BUILD=$5
+    local OPTIONS=$6
+    shift 6
 
     if [[ ! ($BUILD) || ($BUILD == "no") ]]; then
         return
@@ -747,7 +765,7 @@ build_from_github_cmake()
     display_heading_message "Preparing to build $REPO"
 
     # Build the local repository clone.
-    cmake_project_directory "$REPO" "$JOBS" "$TEST" "${CONFIGURATION[@]}"
+    cmake_project_directory "$REPO" "$MAKEFILE_PATH" "$JOBS" "$TEST" "${CONFIGURATION[@]}"
 }
 
 # Because boost ICU static lib detection assumes in incorrect ICU path.
@@ -926,32 +944,32 @@ build_all()
     create_from_github bitcoin-core secp256k1 ${SECP256K1_BRANCH} "$BUILD_SECP256K1"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${SECP256K1_FLAGS[@]}"
-    build_from_github secp256k1 "$PARALLEL" false "$BUILD_SECP256K1" "${SECP256K1_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
+    build_from_github_cmake secp256k1 "." "$PARALLEL" false "$BUILD_SECP256K1" "${SECP256K1_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-system ${BITCOIN_SYSTEM_BRANCH} "yes"
+    create_from_github ${BITCOIN_OWNER} libbitcoin-system ${BITCOIN_SYSTEM_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_SYSTEM_FLAGS[@]}"
-    build_from_github_cmake libbitcoin-system "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+    build_from_github_cmake libbitcoin-system "builds/cmake-v2" "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-network ${BITCOIN_NETWORK_BRANCH} "yes"
+    create_from_github ${BITCOIN_OWNER} libbitcoin-network ${BITCOIN_NETWORK_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NETWORK_FLAGS[@]}"
-    build_from_github_cmake libbitcoin-network "$PARALLEL" false "yes" "${BITCOIN_NETWORK_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+    build_from_github_cmake libbitcoin-network "builds/cmake-v2" "$PARALLEL" false "yes" "${BITCOIN_NETWORK_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-database ${BITCOIN_DATABASE_BRANCH} "yes"
+    create_from_github ${BITCOIN_OWNER} libbitcoin-database ${BITCOIN_DATABASE_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_DATABASE_FLAGS[@]}"
-    build_from_github_cmake libbitcoin-database "$PARALLEL" false "yes" "${BITCOIN_DATABASE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+    build_from_github_cmake libbitcoin-database "builds/cmake-v2" "$PARALLEL" false "yes" "${BITCOIN_DATABASE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NODE_FLAGS[@]}"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-node ${BITCOIN_NODE_BRANCH} "yes"
-        build_from_github_cmake libbitcoin-node "$PARALLEL" true "yes" "${BITCOIN_NODE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+        create_from_github ${BITCOIN_OWNER} libbitcoin-node ${BITCOIN_NODE_BRANCH} "yes"
+        build_from_github_cmake libbitcoin-node "builds/cmake-v2" "$PARALLEL" true "yes" "${BITCOIN_NODE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
         push_directory ".."
-        build_from_github_cmake libbitcoin-node "$PARALLEL" true "yes" "${BITCOIN_NODE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+        build_from_github_cmake libbitcoin-node "builds/cmake-v2" "$PARALLEL" true "yes" "${BITCOIN_NODE_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
         pop_directory
         pop_directory
     fi
@@ -973,6 +991,7 @@ normalize_static_and_shared_options "$@"
 remove_build_options
 set_prefix
 set_pkgconfigdir
+set_with_icu_prefix
 set_with_boost_prefix
 
 remove_install_options
@@ -1024,16 +1043,17 @@ BOOST_OPTIONS=(
 # Define secp256k1 options.
 #------------------------------------------------------------------------------
 SECP256K1_OPTIONS=(
-"--disable-tests" \
-"--enable-experimental" \
-"--enable-module-recovery" \
-"--enable-module-schnorrsig")
+"-DSECP256K1_BUILD_TESTS=OFF" \
+"-DSECP256K1_EXPERIMENTAL=ON" \
+"-DSECP256K1_ENABLE_MODULE_RECOVERY=ON" \
+"-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON")
 
 # Define bitcoin-system options.
 #------------------------------------------------------------------------------
 BITCOIN_SYSTEM_OPTIONS=(
 "-Dwith-tests=no" \
 "-Dwith-examples=no" \
+"${with_icu}" \
 "${with_boost}" \
 "${with_pkgconfigdir}")
 
