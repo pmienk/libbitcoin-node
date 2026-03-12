@@ -29,18 +29,18 @@ option( with-test "Build test." ON )
 #------------------------------------------------------------------------------
 
 if ( BUILD_SHARED_LIBS )
-  set( bitcoin-database_USE_STATIC_LIBS "OFF" )
-  set( bitcoin-network_USE_STATIC_LIBS "OFF" )
+  set( libbitcoin-database_USE_STATIC_LIBS "OFF" )
+  set( libbitcoin-network_USE_STATIC_LIBS "OFF" )
   set( Boost_USE_STATIC_LIBS "OFF" )
 else()
-  set( bitcoin-database_USE_STATIC_LIBS "ON" )
-  set( bitcoin-network_USE_STATIC_LIBS "ON" )
+  set( libbitcoin-database_USE_STATIC_LIBS "ON" )
+  set( libbitcoin-network_USE_STATIC_LIBS "ON" )
   set( Boost_USE_STATIC_LIBS "ON" )
 endif()
 
-find_package( bitcoin-database 4.0.0 REQUIRED )
+find_package( libbitcoin-database 4.0.0 REQUIRED )
 
-find_package( bitcoin-network 4.0.0 REQUIRED )
+find_package( libbitcoin-network 4.0.0 REQUIRED )
 
 find_package( Boost 1.86.0 REQUIRED
   COMPONENTS
@@ -114,17 +114,17 @@ if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
 endif()
 
 #------------------------------------------------------------------------------
-# bitcoin-node library
+# libbitcoin-node library
 #------------------------------------------------------------------------------
-add_library( bitcoin-node )
-add_library( bitcoin::node ALIAS bitcoin-node )
+add_library( libbitcoin-node )
+add_library( bitcoin::node ALIAS libbitcoin-node )
 
-target_compile_features( bitcoin-node
+target_compile_features( libbitcoin-node
   PUBLIC
     cxx_std_20
 )
 
-target_compile_options( bitcoin-node
+target_compile_options( libbitcoin-node
   PRIVATE
     -Wall
     -Wextra
@@ -136,44 +136,45 @@ target_compile_options( bitcoin-node
     $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
 )
 
-file( GLOB_RECURSE bitcoin_node_HEADERS CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_node_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.ipp"
 )
 
-file( GLOB_RECURSE bitcoin_node_SOURCES CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_node_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.cpp"
 )
 
-target_sources( bitcoin-node
+target_sources( libbitcoin-node
   PUBLIC
     FILE_SET HEADERS
     BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
     FILES
-      ${bitcoin_node_HEADERS}
+      ${libbitcoin_node_HEADERS}
   PRIVATE
-    ${bitcoin_node_SOURCES}
+    ${libbitcoin_node_SOURCES}
 )
 
-target_include_directories( bitcoin-node
+target_include_directories( libbitcoin-node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries( bitcoin-node
+target_link_libraries( libbitcoin-node
   PUBLIC
     bitcoin::database
     bitcoin::network
 )
 
-set_target_properties(bitcoin-node
+set_target_properties( libbitcoin-node
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     EXPORT_NAME node
+    OUTPUT_NAME bitcoin-node
 )
 
 #------------------------------------------------------------------------------
@@ -224,6 +225,12 @@ if ( with-test )
       Boost::unit_test_framework
       bitcoin::node
   )
+
+  set_target_properties( libbitcoin-node-tests
+    PROPERTIES
+      VERSION ${PROJECT_VERSION}
+      SOVERSION ${PROJECT_VERSION_MAJOR}
+  )
 endif()
 #------------------------------------------------------------------------------
 # Installation routine.
@@ -231,8 +238,8 @@ endif()
 include( GNUInstallDirs )
 include( CMakePackageConfigHelpers )
 
-install( TARGETS bitcoin-node
-  EXPORT bitcoin-node-targets
+install( TARGETS libbitcoin-node
+  EXPORT libbitcoin-node-targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -240,27 +247,27 @@ install( TARGETS bitcoin-node
   FILE_SET HEADERS
 )
 
-install( EXPORT bitcoin-node-targets
+install( EXPORT libbitcoin-node-targets
   NAMESPACE bitcoin::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-node
-  FILE bitcoin-node-targets.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-node
+  FILE libbitcoin-node-targets.cmake
 )
 
 configure_package_config_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/bitcoin-node-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-node-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-node
+  ${CMAKE_CURRENT_SOURCE_DIR}/libbitcoin-node-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-node-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-node
 )
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/bitcoin-node-config-version.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-node-config-version.cmake"
   VERSION ${PACKAGE_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-node-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-node-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-node
+    ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-node-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-node-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-node
 )
