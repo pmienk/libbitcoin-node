@@ -41,10 +41,10 @@
 # Branches for github dependencies.
 #------------------------------------------------------------------------------
 SECP256K1_BRANCH="v0.7.0"
-BITCOIN_SYSTEM_BRANCH="master"
-BITCOIN_NETWORK_BRANCH="master"
-BITCOIN_DATABASE_BRANCH="master"
-BITCOIN_NODE_BRANCH="master"
+BITCOIN_SYSTEM_BRANCH="generated-rewrite-cmake"
+BITCOIN_NETWORK_BRANCH="generated-rewrite-cmake"
+BITCOIN_DATABASE_BRANCH="generated-rewrite-cmake"
+BITCOIN_NODE_BRANCH="generated-rewrite-cmake"
 
 # Sentinel for comparison of sequential build.
 #------------------------------------------------------------------------------
@@ -389,6 +389,14 @@ set_pkgconfigdir()
     with_pkgconfigdir="--with-pkgconfigdir=$PREFIX_PKG_CONFIG_DIR"
 }
 
+set_with_icu_prefix()
+{
+    if [[ $BUILD_ICU ]]; then
+        with_icu="ICU_ROOT=${PREFIX}"
+        export ICU_ROOT="$PREFIX"
+    fi
+}
+
 set_with_boost_prefix()
 {
     if [[ $BUILD_BOOST ]]; then
@@ -440,16 +448,20 @@ initialize_icu_packages()
         # Update PKG_CONFIG_PATH for ICU package installations on OSX.
         # OSX provides libicucore.dylib with no pkgconfig and doesn't support
         # renaming or important features, so we can't use that.
-        local HOMEBREW_USR_ICU_PKG_CONFIG="/usr/local/opt/icu4c/lib/pkgconfig"
-        local HOMEBREW_OPT_ICU_PKG_CONFIG="/opt/homebrew/opt/icu4c/lib/pkgconfig"
-        local MACPORTS_ICU_PKG_CONFIG="/opt/local/lib/pkgconfig"
+        local HOMEBREW_USR_ICU="/usr/local/opt/icu4c"
+        local HOMEBREW_OPT_ICU="/opt/homebrew/opt/icu4c"
+        local MACPORTS_ICU="/opt/local"
+        local PKG_CONFIG_SUFFIX="lib/pkgconfig"
 
-        if [[ -d "$HOMEBREW_USR_ICU_PKG_CONFIG" ]]; then
-            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_USR_ICU_PKG_CONFIG"
-        elif [[ -d "$HOMEBREW_OPT_ICU_PKG_CONFIG" ]]; then
-            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_OPT_ICU_PKG_CONFIG"
-        elif [[ -d "$MACPORTS_ICU_PKG_CONFIG" ]]; then
-            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$MACPORTS_ICU_PKG_CONFIG"
+        if [[ -d "${HOMEBREW_USR_ICU}/${PKG_CONFIG_SUFFIX}" ]]; then
+            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${HOMEBREW_USR_ICU}/${PKG_CONFIG_SUFFIX}"
+            export ICU_ROOT="${HOMEBREW_USR_ICU}"
+        elif [[ -d "${HOMEBREW_OPT_ICU}/${PKG_CONFIG_SUFFIX}" ]]; then
+            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${HOMEBREW_OPT_ICU}/${PKG_CONFIG_SUFFIX}"
+            export ICU_ROOT="${HOMEBREW_OPT_ICU}"
+        elif [[ -d "${MACPORTS_ICU}/${PKG_CONFIG_SUFFIX}" ]]; then
+            export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${MACPORTS_ICU}/${PKG_CONFIG_SUFFIX}"
+            export ICU_ROOT="${MACPORTS_ICU}"
         fi
     fi
 }
@@ -806,17 +818,17 @@ build_all()
     export CPPFLAGS="$CPPFLAGS ${SECP256K1_FLAGS[@]}"
     build_from_github secp256k1 "$PARALLEL" false "$BUILD_SECP256K1" "${SECP256K1_OPTIONS[@]}" "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-system ${BITCOIN_SYSTEM_BRANCH} "yes"
+    create_from_github pmienk libbitcoin-system ${BITCOIN_SYSTEM_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_SYSTEM_FLAGS[@]}"
     build_from_github libbitcoin-system "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-network ${BITCOIN_NETWORK_BRANCH} "yes"
+    create_from_github pmienk libbitcoin-network ${BITCOIN_NETWORK_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NETWORK_FLAGS[@]}"
     build_from_github libbitcoin-network "$PARALLEL" false "yes" "${BITCOIN_NETWORK_OPTIONS[@]}" "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-database ${BITCOIN_DATABASE_BRANCH} "yes"
+    create_from_github pmienk libbitcoin-database ${BITCOIN_DATABASE_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_DATABASE_FLAGS[@]}"
     build_from_github libbitcoin-database "$PARALLEL" false "yes" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
@@ -824,7 +836,7 @@ build_all()
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NODE_FLAGS[@]}"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-node ${BITCOIN_NODE_BRANCH} "yes"
+        create_from_github pmienk libbitcoin-node ${BITCOIN_NODE_BRANCH} "yes"
         build_from_github libbitcoin-node "$PARALLEL" true "yes" "${BITCOIN_NODE_OPTIONS[@]}" "$@"
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
@@ -851,6 +863,7 @@ normalize_static_and_shared_options "$@"
 remove_build_options
 set_prefix
 set_pkgconfigdir
+set_with_icu_prefix
 set_with_boost_prefix
 
 

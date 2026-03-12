@@ -25,19 +25,19 @@ IF NOT EXIST "%nuget_pkg_path%" (
   )
 )
 
-call :init libbitcoin libbitcoin-system master
+call :init pmienk libbitcoin-system generated-rewrite-cmake
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository libbitcoin libbitcoin-system master failed."
+  call :failure "Initializing repository pmienk libbitcoin-system generated-rewrite-cmake failed."
   exit /b 1
 )
-call :init libbitcoin libbitcoin-network master
+call :init pmienk libbitcoin-network generated-rewrite-cmake
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository libbitcoin libbitcoin-network master failed."
+  call :failure "Initializing repository pmienk libbitcoin-network generated-rewrite-cmake failed."
   exit /b 1
 )
-call :init libbitcoin libbitcoin-database master
+call :init pmienk libbitcoin-database generated-rewrite-cmake
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository libbitcoin libbitcoin-database master failed."
+  call :failure "Initializing repository pmienk libbitcoin-database generated-rewrite-cmake failed."
   exit /b 1
 )
 call :bld_repo libbitcoin-node
