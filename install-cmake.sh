@@ -688,7 +688,7 @@ cmake_tests()
 cmake_project_directory()
 {
     local PROJ_NAME=$1
-    local MAKEFILE_PATH=$2
+    local CMAKE_PATH=$2
     local JOBS=$3
     local TEST=$4
     shift 4
@@ -705,7 +705,7 @@ cmake_project_directory()
         VERBOSITY="-DCMAKE_VERBOSE_MAKEFILE=ON"
     fi
 
-    cmake ${VERBOSITY} -LA $@ "../${MAKEFILE_PATH}"
+    cmake ${VERBOSITY} -LA $@ "../${CMAKE_PATH}"
 
     make_jobs "$JOBS"
 
@@ -722,11 +722,12 @@ cmake_project_directory()
 build_from_github_cmake()
 {
     local REPO=$1
-    local JOBS=$2
-    local TEST=$3
-    local BUILD=$4
-    local OPTIONS=$5
-    shift 5
+    local CMAKE_PATH=$2
+    local JOBS=$3
+    local TEST=$4
+    local BUILD=$5
+    local OPTIONS=$6
+    shift 6
 
     if [[ ! ($BUILD) || ($BUILD == "no") ]]; then
         return
@@ -738,7 +739,7 @@ build_from_github_cmake()
     display_heading_message "Preparing to build $REPO"
 
     # Build the local repository clone.
-    cmake_project_directory "$REPO" "$JOBS" "$TEST" "${CONFIGURATION[@]}"
+    cmake_project_directory "$REPO" "$CMAKE_PATH" "$JOBS" "$TEST" "${CONFIGURATION[@]}"
 }
 
 # Because boost ICU static lib detection assumes in incorrect ICU path.
