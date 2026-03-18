@@ -208,6 +208,11 @@ if ( with-test )
     --build_info=yes
   )
 
+  target_compile_features( libbitcoin-node-tests
+    PUBLIC
+      cxx_std_20
+  )
+
   target_compile_options( libbitcoin-node-tests
     PRIVATE
       -Wall
