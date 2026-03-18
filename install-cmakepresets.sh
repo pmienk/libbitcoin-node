@@ -376,10 +376,10 @@ handle_custom_options()
         exit 1
     elif [[ $DISABLE_NDEBUG ]]; then
         CUMULATIVE_FILTERED_ARGS="--disable-ndebug"
-        CUMULATIVE_FILTERED_ARGS_CMAKE="-Denable-ndebug=no"
+        CUMULATIVE_FILTERED_ARGS_CMAKE="-DCMAKE_BUILD_TYPE=Debug"
     else
         CUMULATIVE_FILTERED_ARGS="--enable-ndebug"
-        CUMULATIVE_FILTERED_ARGS_CMAKE="-Denable-ndebug=yes"
+        CUMULATIVE_FILTERED_ARGS_CMAKE="-DCMAKE_BUILD_TYPE=Release"
     fi
 
     # Process link declaration
