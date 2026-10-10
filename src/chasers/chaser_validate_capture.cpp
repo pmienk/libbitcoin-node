@@ -67,7 +67,7 @@ void chaser_validate::do_fire(missed miss, size_t count) NOEXCEPT
 
 signatures chaser_validate::get_capture(const header_link& link) NOEXCEPT
 {
-    if (!batch_enabled_ || link.is_terminal() || is_current_header(link))
+    if (!verify_enabled_ || link.is_terminal() || is_current_header(link))
         return { false };
 
     // The capture populates this thread's accumulators (commit_capture consumes).

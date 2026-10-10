@@ -43,8 +43,11 @@ chaser_validate::chaser_validate(full_node& node) NOEXCEPT
     initial_subsidy_(node.system_settings().initial_subsidy()),
     maximum_backlog_(node.node_settings().maximum_concurrency_()),
     maximum_height_(node.node_settings().maximum_height_()),
-    batch_target_(node.node_settings().batch_signatures),
-    batch_enabled_(node.node_settings().batch_signatures_enabled() &&
+    verify_target_(node.node_settings().batch_verify),
+    silent_target_(node.node_settings().batch_silent),
+    verify_enabled_(node.node_settings().batch_verify_enabled() &&
+        system::batched::accelerated()),
+    silent_enabled_(node.node_settings().batch_silent_enabled() &&
         system::batched::accelerated()),
     node_witness_(node.node_settings().require_witness),
     filter_(node.archive().filter_enabled())
@@ -53,10 +56,14 @@ chaser_validate::chaser_validate(full_node& node) NOEXCEPT
 
 code chaser_validate::start() NOEXCEPT
 {
-    if (node_settings().batch_signatures_enabled() && !batch_enabled_)
-        LOGN("Signature batching disabled ("
-            << (system::batched::compiled() ? "no device" : "not compiled")
-            << ").");
+    const auto reason = system::batched::compiled() ? "no device" :
+        "not compiled";
+
+    if (node_settings().batch_verify_enabled() && !verify_enabled_)
+        LOGN("Signature batching disabled (" << reason << ").");
+
+    if (node_settings().batch_silent_enabled() && !silent_enabled_)
+        LOGN("Silent batching disabled (" << reason << ").");
 
     set_position(archive().get_fork());
     if (const auto ec = start_batch())
@@ -298,14 +305,21 @@ void chaser_validate::complete_block(const code& ec, const header_link& link,
     // Batch jobs (self-serviced from any thread).
     // ------------------------------------------------------------------------
 
-    if (closed() || !batch_enabled_)
+    if (closed())
+        return;
+
+    // Silent batch drains when mature or recent, independent of signatures.
+    if (silent_enabled_)
+    {
+        const auto recent = !bypass && is_current_header(link);
+        process_silent_batch(recent || is_residual());
+    }
+
+    if (!verify_enabled_)
         return;
 
     // Capturing disabled when confirmed chain current (and not under bypass).
     const auto current = !capturing && !bypass;
-
-    // Silent batch drains when mature or recent, independent of signatures.
-    process_silent_batch(current || is_residual());
 
     if (batched)
     {

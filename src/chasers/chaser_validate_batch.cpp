@@ -50,7 +50,7 @@ code chaser_validate::start_batch() NOEXCEPT
 
         // Prevalid is not a validation state, so dropped blocks validate in
         // place.
-        if (!batch_enabled_)
+        if (!verify_enabled_)
         {
             LOGN("Dropping staged batch rows ("
                 << query.prevalid_records(bank) << ").");
@@ -280,20 +280,20 @@ bool chaser_validate::is_mature(bool residual) NOEXCEPT
 
     // Verify residuals whenever, and non-residuals when mature.
     return residual ||
-        (ecdsa >= batch_target_) ||
-        (schnorr >= batch_target_);
+        (ecdsa >= verify_target_) ||
+        (schnorr >= verify_target_);
 }
 
 // Silent batch is committed while the candidate is not current.
 bool chaser_validate::is_silent_capturing(const header_link& link) NOEXCEPT
 {
-    return batch_enabled_ && !is_current_header(link);
+    return silent_enabled_ && !is_current_header(link);
 }
 
 bool chaser_validate::is_silent_mature(bool residual) NOEXCEPT
 {
     const auto rows = archive().silent_records(silent_bank_.load());
-    return is_nonzero(rows) && (residual || rows >= batch_target_);
+    return is_nonzero(rows) && (residual || rows >= silent_target_);
 }
 
 std::string chaser_validate::log_rate(const std::string& name,

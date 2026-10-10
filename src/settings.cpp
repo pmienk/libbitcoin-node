@@ -40,7 +40,8 @@ settings::settings() NOEXCEPT
     provide_filters{ false },
     provide_privacy{ false },
     limited_blocks{ false },
-    batch_signatures{ 0 },
+    batch_verify{ 0 },
+    batch_silent{ 0 },
     minimum_fee_rate{ 0.0 },
     minimum_bump_rate{ 0.0 },
     allowed_deviation{ 1.5 },
@@ -135,9 +136,14 @@ bool settings::fee_estimate_enabled() const NOEXCEPT
     return to_bool(fee_estimate_horizon_());
 }
 
-bool settings::batch_signatures_enabled() const NOEXCEPT
+bool settings::batch_verify_enabled() const NOEXCEPT
 {
-    return to_bool(batch_signatures);
+    return to_bool(batch_verify);
+}
+
+bool settings::batch_silent_enabled() const NOEXCEPT
+{
+    return to_bool(batch_silent);
 }
 
 network::steady_clock::duration settings::sample_period() const NOEXCEPT

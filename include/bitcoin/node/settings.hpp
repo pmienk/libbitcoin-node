@@ -48,7 +48,8 @@ public:
     float allowed_deviation;
     double minimum_fee_rate;
     double minimum_bump_rate;
-    uint64_t batch_signatures;
+    uint64_t batch_verify;
+    uint64_t batch_silent;
     uint16_t current_connections;
     uint16_t announcement_cache;
     uint16_t fee_estimate_horizon;
@@ -72,7 +73,8 @@ public:
     virtual uint64_t services_provided() const NOEXCEPT;
     virtual uint64_t services_required() const NOEXCEPT;
     virtual bool fee_estimate_enabled() const NOEXCEPT;
-    virtual bool batch_signatures_enabled() const NOEXCEPT;
+    virtual bool batch_verify_enabled() const NOEXCEPT;
+    virtual bool batch_silent_enabled() const NOEXCEPT;
     virtual network::steady_clock::duration sample_period() const NOEXCEPT;
     virtual network::steady_clock::duration compact_timeout() const NOEXCEPT;
     virtual network::wall_clock::duration currency_window() const NOEXCEPT;
