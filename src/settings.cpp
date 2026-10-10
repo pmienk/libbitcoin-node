@@ -41,6 +41,7 @@ settings::settings() NOEXCEPT
     provide_privacy{ false },
     limited_blocks{ false },
     batch_signatures{ 0 },
+    batch_silent{ 0 },
     minimum_fee_rate{ 0.0 },
     minimum_bump_rate{ 0.0 },
     allowed_deviation{ 1.5 },

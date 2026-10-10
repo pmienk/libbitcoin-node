@@ -293,7 +293,7 @@ bool chaser_validate::is_silent_capturing(const header_link& link) NOEXCEPT
 bool chaser_validate::is_silent_mature(bool residual) NOEXCEPT
 {
     const auto rows = archive().silent_records(silent_bank_.load());
-    return is_nonzero(rows) && (residual || rows >= batch_target_);
+    return is_nonzero(rows) && (residual || rows >= silent_target_);
 }
 
 std::string chaser_validate::log_rate(const std::string& name,

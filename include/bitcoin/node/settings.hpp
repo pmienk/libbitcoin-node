@@ -49,6 +49,7 @@ public:
     double minimum_fee_rate;
     double minimum_bump_rate;
     uint64_t batch_signatures;
+    uint64_t batch_silent;
     uint16_t current_connections;
     uint16_t announcement_cache;
     uint16_t fee_estimate_horizon;
