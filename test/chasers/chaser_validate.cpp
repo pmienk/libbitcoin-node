@@ -412,7 +412,7 @@ struct validate_staged_fixture
     validate_staged_fixture()
       : validate_setup_fixture(validate_staged, [](configuration& config)
         {
-            config.node.batch_signatures = 1;
+            config.node.batch_verify = 1;
         })
     {
     }
@@ -424,7 +424,7 @@ struct validate_staged_second_fixture
     validate_staged_second_fixture()
       : validate_setup_fixture(validate_staged_second, [](configuration& config)
         {
-            config.node.batch_signatures = 1;
+            config.node.batch_verify = 1;
         })
     {
     }

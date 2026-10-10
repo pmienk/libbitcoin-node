@@ -185,9 +185,10 @@ private:
     const uint64_t initial_subsidy_;
     const size_t maximum_backlog_;
     const size_t maximum_height_;
-    const uint64_t batch_target_;
+    const uint64_t verify_target_;
     const uint64_t silent_target_;
-    const bool batch_enabled_;
+    const bool verify_enabled_;
+    const bool silent_enabled_;
     const bool node_witness_;
     const bool filter_;
 };
