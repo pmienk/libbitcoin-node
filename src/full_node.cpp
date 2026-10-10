@@ -292,8 +292,9 @@ bool full_node::resume() NOEXCEPT
     }
 
     LOGS("Resuming network.");
+    const auto resumed = net::resume();
     notify(error::success, chases::resume{});
-    return net::resume();
+    return resumed;
 }
 
 // This is just a best effort, the call may have to be repeated.
